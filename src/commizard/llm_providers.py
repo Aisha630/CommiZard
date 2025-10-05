@@ -57,7 +57,7 @@ def http_request(method: str, url: str, **kwargs) -> HttpResponse:
             r = requests.post(url, **kwargs, timeout=TIMEOUT)
 
         else:
-            if method.upper() in ("PUT", "DELETE", "PUT"):
+            if method.upper() in ("PUT", "DELETE", "PATCH"):
                 raise NotImplementedError(f"{method} is not implemented.")
             else:
                 raise ValueError(f"{method} is not a valid method.")
@@ -142,7 +142,9 @@ def unload_model() -> None:
     url = "http://localhost:11434/api/generate"
     payload = {"model": selected_model, "keep_alive": 0}
     selected_model = None
-    http_request("POST", url, json=payload)
+    response = http_request("POST", url, json=payload)
+    if response.is_error():
+        output.print_error(f"Failed to unload model: {response.err_message()}")
 
 
 # TODO: see issues #11 and #15

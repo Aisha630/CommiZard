@@ -1,4 +1,5 @@
 import subprocess
+from typing import Optional
 
 
 def run_git_command(args: list[str]) -> subprocess.CompletedProcess:
@@ -32,12 +33,12 @@ def is_changed() -> bool:
     return (out.returncode == 0) and (out.stdout.strip() != "")
 
 
-def get_diff() -> str:
+def get_diff() -> Optional[str]:
     """
     Get the diff from the current working directory.
 
     Returns:
-        the diff as a string (raw Git output)
+        the diff as a string (raw Git output), or None if an error occurred
     """
     if not is_changed():
         return ""
@@ -46,7 +47,7 @@ def get_diff() -> str:
 
     if out.returncode == 0:
         return out.stdout.strip()
-    return ""
+    return None
 
 
 def commit(msg: str) -> tuple[int, str]:
@@ -60,10 +61,13 @@ def commit(msg: str) -> tuple[int, str]:
     return out.returncode, ret
 
 
-def clean_diff(diff: str) -> str:
+def clean_diff(diff: Optional[str]) -> str:
     """
     Remove unnecessary information from the diff.
     """
+    if diff is None:
+        return ""
+
     lines = diff.splitlines()
     for line in lines[:]:
         if line.startswith(("diff --git", "index ", "warning:")):
@@ -75,4 +79,7 @@ def get_clean_diff() -> str:
     """
     Get the current git diff, sanitized for LLM consumption.
     """
+    diff = get_diff()
+    if diff is None:
+        return ""
     return clean_diff(get_diff())
