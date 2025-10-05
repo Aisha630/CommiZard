@@ -8,8 +8,9 @@ def run_git_command(args: list[str]) -> subprocess.CompletedProcess:
     Returns:
         a CompletedProcess object
     """
-    cmd = ["git"] + args
-    return subprocess.run(
+    # ignoring S603 because args is controlled internally so no injection risk
+    cmd = ["git", *args]
+    return subprocess.run(  # noqa: S603
         cmd, capture_output=True, text=True, encoding="utf-8", errors="ignore"
     )
 
@@ -45,6 +46,7 @@ def get_diff() -> str:
 
     if out.returncode == 0:
         return out.stdout.strip()
+    return ""
 
 
 def commit(msg: str) -> tuple[int, str]:
@@ -64,11 +66,7 @@ def clean_diff(diff: str) -> str:
     """
     lines = diff.splitlines()
     for line in lines[:]:
-        if (
-            line.startswith("diff --git")
-            or line.startswith("index ")
-            or line.startswith("warning:")
-        ):
+        if line.startswith(("diff --git", "index ", "warning:")):
             lines.remove(line)
     return "\n".join(lines)
 
